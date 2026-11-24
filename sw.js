@@ -1,8 +1,8 @@
 // Offline support. RULE: bump VERSION on every deploy that changes a file in SHELL (and bump ?v= in index.html).
 // Audio clips go to a separate cache that survives app updates; bump MEDIA only if an existing clip is replaced in place.
-const VERSION = 'sk-v1.0.0';
-const MEDIA = 'sk-media-1';
-const SHELL = ['./','index.html','css/app.css?v=1','js/app.js?v=1','js/content.js','js/grammar.js','js/session.js','js/store.js','js/audio.js',
+const VERSION = 'sk-v1.1.0';
+const MEDIA = 'sk-media-2';
+const SHELL = ['./','index.html','css/app.css?v=2','js/app.js?v=2','js/content.js','js/grammar.js','js/session.js','js/store.js','js/audio.js',
   'js/sprites.js','manifest.webmanifest','assets/img/icon.svg','assets/img/icon-192.png','assets/audio/manifest.json','assets/audio/silence.mp3'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== MEDIA).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

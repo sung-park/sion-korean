@@ -8,7 +8,7 @@
 - 줄인 문장(-고 / -는데·-은데·-ㄴ데 / -아서·-어서·-해서)은 `js/grammar.js`가 만들고, `node tools/check.mjs`로 전부 출력해 사람이 검토합니다.
   불규칙 활용(ㅂ·ㄷ·ㅅ·ㅎ·르)은 표에 없으면 오류를 내도록 되어 있어 잘못된 활용이 몰래 들어가지 않습니다.
 - 진행 기록: localStorage `sk.v1` (필드는 추가만 하고 이름을 바꾸지 않음 → 예전 기록과 호환)
-- 소리: ElevenLabs(Annie KR)로 미리 만든 mp3만 사용(브라우저 TTS 없음). 아이폰 무음 모드에서도 재생되도록 audioSession=playback + Web Audio 잠금 해제.
+- 소리: 아빠 목소리(ElevenLabs 복제 음성 '성근2')로 미리 만든 mp3만 사용 (assets/audio/d/, 음량 -16 LUFS로 맞춤)(브라우저 TTS 없음). 아이폰 무음 모드에서도 재생되도록 audioSession=playback + Web Audio 잠금 해제.
   `node tools/dump_lines.mjs > /tmp/lines.json && ELEVENLABS_API_KEY=... python3 tools/gen_audio.py /tmp/lines.json`
 - 배포 규칙: 앱 파일을 바꾸면 `sw.js`의 `VERSION`과 `index.html`의 `?v=`를 함께 올립니다.
 - 블록 그림은 직접 만든 픽셀 아트(SVG)이며, 상표·외부 게임 에셋을 쓰지 않습니다.

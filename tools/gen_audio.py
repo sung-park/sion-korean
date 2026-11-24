@@ -1,10 +1,12 @@
-"""Generate narration with ElevenLabs (Annie KR). Key is read from env ELEVENLABS_API_KEY only, never written anywhere.
+"""Generate narration with ElevenLabs. Default voice: 성근2 (dad's cloned voice, v1.1); VOICE=... to override. Key is read from env ELEVENLABS_API_KEY only, never written anywhere.
 Raw responses are cached by content hash in ../audio_raw so re-runs never bill twice.
 Usage: node tools/dump_lines.mjs > /tmp/lines.json && ELEVENLABS_API_KEY=... python3 tools/gen_audio.py /tmp/lines.json"""
 import os, sys, json, hashlib, time, requests, concurrent.futures as cf
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, '..', 'audio_raw'); OUT = os.path.join(ROOT, 'assets', 'audio')
-KEY = os.environ['ELEVENLABS_API_KEY']; VOICE = 'Lb7qkOn5hF8p7qfCDH8q'; MODEL = 'eleven_multilingual_v2'
+KEY = os.environ['ELEVENLABS_API_KEY']; VOICE = os.environ.get('VOICE', 'yuGsluLF2d7vrRAmHqrw'); MODEL = 'eleven_multilingual_v2'
+SUB = os.environ.get('SUB', 'd')   # clips live in assets/audio/<SUB>/ so a new voice gets new URLs (no stale caches)
+import subprocess
 os.makedirs(RAW, exist_ok=True)
 FX = {'ok1':'좋아!','ok2':'정답이야!','ok3':'잘했어!','ok4':'멋져!','ok5':'와, 최고야!','wrong':'괜찮아. 같이 알아보자.',
   'start':'오늘도 이음말 탐험을 떠나 볼까?','start1':'안녕, 시온아! 그리고, 그런데, 그래서를 같이 연습해 보자!','done':'오늘 연습 끝! 정말 잘했어!',
@@ -12,7 +14,7 @@ FX = {'ok1':'좋아!','ok2':'정답이야!','ok3':'잘했어!','ok4':'멋져!','
   'm_2':'그래서는 까닭과 결과야. 앞의 일 때문에 뒤의 일이 생길 때 써.'}
 CONNS = ['그리고', '그런데', '그래서']
 def tts(text, speed=0.9):
-    vs = {'stability':0.6, 'similarity_boost':0.8, 'style':0.0, 'use_speaker_boost':True, 'speed':speed}
+    vs = {'stability':0.6, 'similarity_boost':0.85, 'style':0.0, 'use_speaker_boost':True, 'speed':speed}
     h = hashlib.sha1(json.dumps([text, VOICE, MODEL, vs]).encode()).hexdigest()[:16]; path = os.path.join(RAW, h + '.mp3')
     if os.path.exists(path): return path
     for attempt in range(6):
@@ -24,14 +26,16 @@ def tts(text, speed=0.9):
         raise RuntimeError(f'{r.status_code} {r.text[:200]} for {text!r}')
     open(path, 'wb').write(r.content); return path
 lines = json.load(open(sys.argv[1]))
-jobs = [('fx', k, f'fx/{k}.mp3', t, 0.9) for k, t in FX.items()]
+jobs = [('fx', k, f'fx/{k}.mp3', t, 0.92 if k.startswith('ok') else 0.88) for k, t in FX.items()]
 jobs += [('c', c, f'c/{i}.mp3', c + '.', 0.85) for i, c in enumerate(CONNS)]
 jobs += [('a', k, f'a/{k}.mp3', t, 0.88) for k, t in lines['a']]
 jobs += [('b', k, f'b/{f}.mp3', t, 0.88) for k, f, t in lines['b']]
 man = {}
 def run(j):
-    cat, key, rel, text, sp = j; src = tts(text, sp); dst = os.path.join(OUT, rel); os.makedirs(os.path.dirname(dst), exist_ok=True)
-    open(dst, 'wb').write(open(src, 'rb').read()); return cat, key, rel
+    cat, key, rel, text, sp = j; src = tts(text, sp); rel = SUB + '/' + rel; dst = os.path.join(OUT, rel); os.makedirs(os.path.dirname(dst), exist_ok=True)
+    # loudness-normalise so every clip plays at the same comfortable level
+    subprocess.run(['ffmpeg','-v','error','-y','-i',src,'-af','loudnorm=I=-16:TP=-1.5:LRA=11','-ar','44100','-b:a','96k',dst], check=True)
+    return cat, key, rel
 with cf.ThreadPoolExecutor(4) as ex:
     for cat, key, rel in ex.map(run, jobs): man.setdefault(cat, {})[key] = rel
 for k, v in man.items():
