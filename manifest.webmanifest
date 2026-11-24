@@ -1,0 +1,18 @@
+{
+  "name": "시온이의 이음말 탐험",
+  "short_name": "이음말 탐험",
+  "description": "그리고 · 그런데 · 그래서 매일 10분 연습",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e3f5ff",
+  "theme_color": "#8fd3ff",
+  "lang": "ko",
+  "icons": [
+    {"src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    {"src": "assets/img/icon.svg", "sizes": "any", "type": "image/svg+xml"}
+  ]
+}
